@@ -10,6 +10,7 @@ from tkinter import filedialog
 import traceback
 import sys
 import time
+from tkinter import font
 # importamos la dependencia General
 import General_Prod
 
@@ -45,62 +46,164 @@ class App(tk.Tk):
         
         self.iniciar_app() 
     
+    def create_intro_label(self):
+        intro_text = (
+            "Bienvenido a la Aplicación de Homologación de Catálogos ConAgro.\n\n"
+            "Esta herramienta te permitirá homologar los catálogos de productos \n"
+            "de manera eficiente y precisa. Por favor, sigue las instrucciones \n"
+            "para cargar y procesar los datos.\n\n"
+            "Para comenzar, selecciona el tipo de proceso en el menú lateral\n"
+            "y selecciona el archivo a homologar, luego proporciona la \n"
+            "información requerida en los campos correspondientes."
+        )
+        self.intro_label = ttk.Label(self, text=intro_text, style='TLabel', justify=tk.LEFT)
+    
     def create_widgets(self):
         entry_font = {'font': ('Helvetica', 12)}
         
         # Códigos de producto con clave Syngenta
-        self.CodSygenta = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Syngenta", style='TLabel')
+        self.CodSygenta = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Syngenta:", style='TLabel')
         self.CodSygenta_entry = ttk.Entry(self, textvariable=self.cod_syngenta_var, **entry_font)
-        self.CodSygenta_entry.config(width=30)
+        self.CodSygenta_entry.config(width=20)
         self.B5 = ttk.Button(self, text="Insertar", command=self.obtener_CodSycDise)
         
         # Códigos de productos con clave externa
-        self.CodExt = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Externos", style='TLabel')
+        self.CodExt = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Externos:", style='TLabel')
         self.CodExt_entry = ttk.Entry(self, textvariable=self.cod_ext_var, **entry_font)
-        self.CodExt_entry.config(width=30)
+        self.CodExt_entry.config(width=20)
         self.B7 = ttk.Button(self, text="Insertar", command=self.obtener_CodExt)
         
         # Descripciones de los productos
-        self.NameProdDistr = ttk.Label(self, text="Ingresa el nombre de la columna las descripciones", style='TLabel')
+        self.NameProdDistr = ttk.Label(self, text="Ingresa el nombre de la columna las descripciones:", style='TLabel')
         self.NameProdDistr_entry = ttk.Entry(self, textvariable=self.name_prod_distr_var, **entry_font)
-        self.NameProdDistr_entry.config(width=30)
+        self.NameProdDistr_entry.config(width=20)
         self.B6 = ttk.Button(self, text="Insertar", command=self.obtener_NameProdDistr)
         
         # Codigos de productos con clave externa cuando de origen viene con claves Syngenta
-        self.CodExt_Syc = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Externos", style='TLabel')
+        self.CodExt_Syc = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Externos:", style='TLabel')
         self.CodExt_entry_Syc = ttk.Entry(self, textvariable=self.cod_ext_syc_var, **entry_font)
-        self.CodExt_entry_Syc.config(width=30)
+        self.CodExt_entry_Syc.config(width=20)
         self.B8 = ttk.Button(self, text="Insertar", command=self.obtener_CodExt_Syc)
 
         # Inicialmente ocultar todos los elementos
         self.hide_all()
 
+    def create_all_widgets(self):
+        self.ruta_label = ttk.Label(self, text="Selecciona el catálogo a Homologar:", style='TLabel')
+        
+        self.browse_button = ttk.Button(self, text="Seleccionar archivo", command=self.seleccionar_archivo)
+        
+        self.ruta_label = ttk.Label(self, text="Ruta del archivo seleccionado: \n"+"", style='TLabel')
+        
+        ## Establecemos ruta absoluta de archivo con datos de distribuidores:
+        self.ruta_CatalogoDistribuidores = self.resource_path("Catalogo Distribuidores.xlsx")
+        self.Catalogo = pd.read_excel(self.ruta_CatalogoDistribuidores, sheet_name=0)
+        aux_Num = list(self.Catalogo['Sold to'].sort_values().unique())
+        aux_Name = list(self.Catalogo['Descripción'].unique())
+        
+        # Entradas para el numero de distribuidor
+        self.distri_label = ttk.Label(self, text="Ingresa el Número de cliente:", style='TLabel')
+        
+        self.distri_entry = ttk.Combobox(self, textvariable=self.num_distri, font=('Helvetica', 11), state='normal')
+        self.distri_entry['values'] = aux_Num
+        self.distri_entry.config(width=40)
+        
+        self.B3 = ttk.Button(self, text="Insertar", command=self.obtener_num)
+        
+        self.name_label = ttk.Label(self, text="Ingresa el nombre del cliente:", style='TLabel')
+        
+        # Entrada para el nombre del distribuidor
+        self.name_entry = ttk.Combobox(self, textvariable=self.name_distri, font=('Helvetica', 11), state='normal')
+        self.name_entry['values'] = aux_Name
+        self.name_entry.config(width=40)
+        
+        self.B4 = ttk.Button(self, text="Insertar", command=self.obtener_nombre)
+        
+        self.B2 = ttk.Button(self, text="Homologar catálogo", command=self.mostrar_mensaje)
+        
+    def show_intro_label(self):
+        self.intro_label.place(relx=0.33, rely=0.1, relwidth=0.8, relheight=0.3)
+        
+    def hide_intro_labe(self):
+        self.intro_label.place_forget()
+    
+    def show_all_widgets(self):
+        self.hide_intro_labe()
+        self.nx = 0 if self.menu_lateral.winfo_ismapped() else 0.2
+        self.ruta_label.place(relx=0.3-self.nx, rely=0.15)
+        self.browse_button.place(relx=0.3-self.nx, rely=0.1)
+        self.ruta_label.place(relx=0.3-self.nx, rely=0.2)
+        self.distri_label.place(relx=0.3-self.nx, rely=0.3)
+        self.distri_entry.place(relx=0.35-self.nx, rely=0.35)
+        self.B3.place(relx=0.78-self.nx, rely=0.35)
+        self.name_label.place(relx=0.3-self.nx, rely=0.4)
+        self.name_entry.place(relx=0.35-self.nx, rely=0.45)
+        self.B4.place(relx=0.78-self.nx, rely=0.45)
+        self.B2.place(relx=0.85-self.nx, rely=0.9, anchor='center')
+        
+    def show_hide_widgets(self):
+        self.hide_intro_labe()
+        self.ruta_label.place_forget()
+        self.browse_button.place_forget()
+        self.ruta_label.place_forget()
+        self.distri_label.place_forget()
+        self.distri_entry.place_forget()
+        self.B3.place_forget()
+        self.name_label.place_forget()
+        self.name_entry.place_forget()
+        self.B4.place_forget()
+        self.B2.place_forget()
+    
+    def show_chile_widgets(self):
+        self.browse_button.place(relx=0.3, rely=0.1)
+        
+    def hide_chile_widgets(self):
+        self.browse_button.place_forget()
+        
     def create_greeting_message(self):
         # Obtener el valor de Tipo
         Tipo = self.selected.get()
         
         # Mostrar/Ocultar elementos según el valor de Tipo
-        if Tipo == "0":
+        if Tipo == "1":
+            self.show_all_widgets()
             # Mostrar elementos de tipo Syngenta
             self.show_syngenta_elements()
             # Ocultar elementos de tipo Externo
             self.hide_external_elements()
-        else:
+            # self.hide_chile_widgets()
+        elif Tipo == "0":
+            self.show_hide_widgets()
+            self.hide_syngenta_elements()
+            self.hide_external_elements()
+            self.hide_NameProdDistr()
+            self.hide_chile_widgets()
+            self.show_intro_label()
+        elif Tipo == "2":
+            self.show_all_widgets()
             # Mostrar elementos de tipo Externo
             self.show_external_elements()
             # Ocultar elementos de tipo Syngenta
             self.hide_syngenta_elements()
-
+            # self.hide_chile_widgets()
+        else:
+            self.show_hide_widgets()
+            self.hide_syngenta_elements()
+            self.hide_external_elements()
+            self.hide_NameProdDistr()
+            self.hide_intro_labe()
+            self.show_chile_widgets()
+    
     def show_syngenta_elements(self):
-        self.CodSygenta.place(relx=0.01, rely=0.7)
-        self.CodSygenta_entry.place(relx=0.45, rely=0.7)
-        self.B5.place(relx=0.88, rely=0.7)
-        self.NameProdDistr.place(relx=0.01, rely=0.75)
-        self.NameProdDistr_entry.place(relx=0.45, rely=0.75)
-        self.B6.place(relx=0.88, rely=0.75)
-        self.CodExt_Syc.place(relx=0.01, rely=0.8)
-        self.CodExt_entry_Syc.place(relx=0.45, rely=0.8)
-        self.B8.place(relx=0.88, rely=0.8)
+        self.CodSygenta.place(relx=0.31-self.nx, rely=0.55)
+        self.CodSygenta_entry.place(relx=0.65-self.nx, rely=0.6)
+        self.B5.place(relx=0.88-self.nx, rely=0.6)
+        self.NameProdDistr.place(relx=0.31-self.nx, rely=0.65)
+        self.NameProdDistr_entry.place(relx=0.65-self.nx, rely=0.7)
+        self.B6.place(relx=0.88-self.nx, rely=0.7)
+        self.CodExt_Syc.place(relx=0.31, rely=0.75)
+        self.CodExt_entry_Syc.place(relx=0.65-self.nx, rely=0.8)
+        self.B8.place(relx=0.88-self.nx, rely=0.8)
 
     def hide_syngenta_elements(self):
         self.CodSygenta.place_forget()
@@ -114,25 +217,126 @@ class App(tk.Tk):
         self.B8.place_forget()
 
     def show_external_elements(self):
-        self.CodExt.place(relx=0.01, rely=0.7)
-        self.CodExt_entry.place(relx=0.45, rely=0.7)
-        self.B7.place(relx=0.88, rely=0.7)
-        self.NameProdDistr.place(relx=0.01, rely=0.75)
-        self.NameProdDistr_entry.place(relx=0.45, rely=0.75)
-        self.B6.place(relx=0.88, rely=0.75)
+        self.CodExt.place(relx=0.31-self.nx, rely=0.55)
+        self.CodExt_entry.place(relx=0.65-self.nx, rely=0.6)
+        self.B7.place(relx=0.88-self.nx, rely=0.6)
+        self.NameProdDistr.place(relx=0.31-self.nx, rely=0.65)
+        self.NameProdDistr_entry.place(relx=0.65-self.nx, rely=0.7)
+        self.B6.place(relx=0.88-self.nx, rely=0.7)
 
     def hide_external_elements(self):
         self.CodExt.place_forget()
         self.CodExt_entry.place_forget()
         self.B7.place_forget()
-        # self.NameProdDistr.place_forget()
-        # self.NameProdDistr_entry.place_forget()
-        # self.B6.place_forget()
-
+        
+    def hide_NameProdDistr(self):
+        self.NameProdDistr.place_forget()
+        self.NameProdDistr_entry.place_forget()
+        self.B6.place_forget()
+    
     def hide_all(self):
         self.hide_syngenta_elements()
         self.hide_external_elements()
+    
+    def paneles(self):        
+        # Configuración de barra superior
+        self.barra_superior = tk.Frame(
+            self, bg='#5f7800', height=40
+        )
         
+        self.barra_superior.pack(side=tk.TOP, fill='both')   
+        
+        # Etiqueta de título
+        self.labelTitulo = tk.Label(self.barra_superior, text="Aplicación para Homologación de catálogos ConAgro")
+        self.labelTitulo.config(fg="#fff", font=(
+            "Roboto", 15), bg="#5f7800", pady=10, width=46)
+        self.labelTitulo.pack(side=tk.TOP)  
+
+        self.menu_lateral = tk.Frame(self, bg="#abb400", width=150)
+        self.menu_lateral.pack(side=tk.LEFT, fill='both', expand=False)
+        
+    def controles_barra_superior(self):
+        # Configuración de la barra superior
+        font_awesome = font.Font(family='FontAwesome', size=12)
+
+        # Establecemos la ruta absoluta del icono del boton
+        self.ruta_menu = self.resource_path("menu.png")
+        
+        # configure icon
+        self.icon_menu = tk.PhotoImage(file=self.ruta_menu)
+        
+        # self.nx = float(self.selected.get())-0.8 if self.menu_lateral.winfo_ismapped() else float(self.selected.get())-0.8
+        # Botón del menú lateral
+        self.buttonMenuLateral = tk.Label(self.barra_superior, text="Menú", font=("Roboto", 15),
+                                bd=0, bg="#5f7800", fg="#fff", image=self.icon_menu, compound="right", padx=10)
+        self.buttonMenuLateral.place(relx=0.02, rely=0.25)
+
+    
+    def controles_menu_lateral(self):
+        # Configuración del menú lateral
+        ancho_menu = 20
+        alto_menu = 2
+        font_awesome = font.Font(family='FontAwesome', size=15)
+        
+        # Etiqueta de perfil
+        self.labelPerfil = tk.Label(self.menu_lateral, image=self.icon_big, bg="#abb400")
+        self.labelPerfil.pack(side=tk.TOP, pady=10)
+
+        # Crear los botones con icono y texto
+        self.buttonDashBoard = self.create_menu_button(self.menu_lateral, "Inicio", "\uf109", self.create_greeting_message, "0")
+        self.bottonSync = self.create_menu_button(self.menu_lateral, "Tipo Syngenta", "\uf007", self.create_greeting_message, "1")
+        self.bottonExt = self.create_menu_button(self.menu_lateral, "Tipo externas", "\uf03e", self.create_greeting_message, "2")
+        self.bottonCL = self.create_menu_button(self.menu_lateral, "Chile", "\uf129", self.create_greeting_message, "3")
+        self.buttonSettings = self.create_menu_button(self.menu_lateral, "Settings", "\uf013", self.create_greeting_message)
+
+        
+    def create_menu_button(self, parent, text, icon, command, value=None):
+            frame = tk.Frame(parent, bg="#abb400")
+            frame.pack(side=tk.TOP, fill=tk.X)
+
+            label_icon = tk.Label(frame, text=icon, font=("FontAwesome", 15), bg="#abb400", fg="white")
+            label_icon.pack(side=tk.LEFT, padx=5)
+
+            label_text = tk.Label(frame, text=text, font=("Arial", 12), bg="#abb400", fg="white")
+            label_text.pack(side=tk.LEFT, padx=5)
+
+            if value is not None:
+                label_icon.bind("<Button-1>", lambda event: self.on_click(value, command))
+                label_text.bind("<Button-1>", lambda event: self.on_click(value, command))
+            else:
+                label_icon.bind("<Button-1>", lambda event: command())
+                label_text.bind("<Button-1>", lambda event: command())
+
+            self.bind_hover_events(frame, label_icon, label_text)
+
+            return frame
+
+    def bind_hover_events(self, frame, label_icon, label_text):
+        # Asociar eventos Enter y Leave con la función dinámica
+        frame.bind("<Enter>", lambda event: self.on_enter(event, frame, label_icon, label_text))
+        frame.bind("<Leave>", lambda event: self.on_leave(event, frame, label_icon, label_text))
+        label_icon.bind("<Enter>", lambda event: self.on_enter(event, frame, label_icon, label_text))
+        label_icon.bind("<Leave>", lambda event: self.on_leave(event, frame, label_icon, label_text))
+        label_text.bind("<Enter>", lambda event: self.on_enter(event, frame, label_icon, label_text))
+        label_text.bind("<Leave>", lambda event: self.on_leave(event, frame, label_icon, label_text))
+
+    def on_enter(self, event, frame, label_icon, label_text):
+        # Cambiar estilo al pasar el ratón por encima
+        frame.config(bg="#009933")
+        label_icon.config(bg="#009933")
+        label_text.config(bg="#009933")
+
+    def on_leave(self, event, frame, label_icon, label_text):
+        # Restaurar estilo al salir el ratón
+        frame.config(bg="#abb400")
+        label_icon.config(bg="#abb400")
+        label_text.config(bg="#abb400")
+
+    def on_click(self, value, command):
+        # Obtener el valor de la variable de tipo de ventana
+        self.selected.set(value)
+        command()
+    
     def iniciar_app(self):
         self.deiconify()
         
@@ -150,7 +354,7 @@ class App(tk.Tk):
 
         
         # Aplicar transparencia
-        self.attributes('-alpha', 0.95)  # Valor entre 0 (completamente transparente) y 1 (opaco)
+        self.attributes('-alpha', 0.98)  # Valor entre 0 (completamente transparente) y 1 (opaco)
         
         # Establecemos la ruta absoluta:
         self.ruta_ico_s = self.resource_path("ConAgro_icon_small.png")
@@ -162,62 +366,22 @@ class App(tk.Tk):
         self.iconphoto(False, self.icon_big, self.icon_small)
         self.iconbitmap('ConAgro.ico')
         
-        label = ttk.Label(self, text="Bienvenido a la Aplicación para Homologación de catálogos ConAgro", style='Title.TLabel')
-        label.place(relx=0.5, rely=0.03, anchor='center')
+        # Etiqueta de informacion
+        self.labelTitulo = ttk.Label(self, text="Reportar cualquier incidente con el aplicativo con: \ncarlos.espadin@syngenta.com", font=("Roboto", 10), background='#f0f0f0', foreground='black') # Modificar
+        self.labelTitulo.place(relx=0.35, rely=0.93, anchor='center')
+        # self.labelTitulo.pack(side=tk.RIGHT)
         
-        ruta_label = ttk.Label(self, text="Selecciona el catálogo a Homologar:", style='TLabel')
-        ruta_label.place(relx=0.1, rely=0.1)
+        # Invocacion de paneles
+        self.paneles()
+        self.controles_barra_superior()
+        self.controles_menu_lateral()
         
-        self.browse_button = ttk.Button(self, text="Seleccionar archivo", command=self.seleccionar_archivo)
-        self.browse_button.place(relx=0.4, rely=0.1)
-        
-        self.ruta_label = ttk.Label(self, text="Ruta del archivo seleccionado: \n"+"", style='TLabel')
-        self.ruta_label.place(relx=0.01, rely=0.2)
-        
-        ## Establecemos ruta absoluta de archivo con datos de distribuidores:
-        self.ruta_CatalogoDistribuidores = self.resource_path("Catalogo Distribuidores.xlsx")
-        self.Catalogo = pd.read_excel(self.ruta_CatalogoDistribuidores, sheet_name=0)
-        aux_Num = list(self.Catalogo['Sold to'].sort_values().unique())
-        aux_Name = list(self.Catalogo['Descripción'].unique())
-        
-        # Entradas para el numero de distribuidor
-        distri_label = ttk.Label(self, text="Ingresa el Número de cliente:", style='TLabel')
-        distri_label.place(relx=0.1, rely=0.3)
-        
-        self.distri_entry = ttk.Combobox(self, textvariable=self.num_distri, font=('Helvetica', 11), state='normal')
-        self.distri_entry['values'] = aux_Num
-        self.distri_entry.place(relx=0.35, rely=0.3)
-        self.distri_entry.config(width=40)
-        
-        
-        self.B3 = ttk.Button(self, text="Insertar", command=self.obtener_num)
-        self.B3.place(relx=0.78, rely=0.3)
-        
-        name_label = ttk.Label(self, text="Ingresa el nombre del cliente:", style='TLabel')
-        name_label.place(relx=0.1, rely=0.4)
-        
-        # Entrada para el nombre del distribuidor
-        self.name_entry = ttk.Combobox(self, textvariable=self.name_distri, font=('Helvetica', 11), state='normal')
-        self.name_entry['values'] = aux_Name
-        self.name_entry.place(relx=0.35, rely=0.4)
-        self.name_entry.config(width=40)
-        
-        self.B4 = ttk.Button(self, text="Insertar", command=self.obtener_nombre)
-        self.B4.place(relx=0.78, rely=0.4)
-        
-        radio_label = ttk.Label(self, text="Selecciona el tipo de producto con el que cuenta el catálogo:", style='TLabel')
-        radio_label.place(relx=0.05, rely=0.6)
-        
-        self.RB1 = ttk.Radiobutton(self, text="Syngenta", variable=self.selected, value="0", command=self.create_greeting_message)
-        self.RB2 = ttk.Radiobutton(self, text="Externo", variable=self.selected, value="1", command=self.create_greeting_message)
-        
-        self.RB1.place(relx=0.6, rely=0.6)
-        self.RB2.place(relx=0.7, rely=0.6)
-        
-        self.B2 = ttk.Button(self, text="Homologar catálogo", command=self.mostrar_mensaje)
-        self.B2.place(relx=0.85, rely=0.9, anchor='center')
+        self.create_intro_label()
+        self.show_intro_label()
+        self.create_all_widgets()
         
         self.create_widgets()
+        
 
     # Método para cerrar la venta App.
     def cerrar_ventana(self):
@@ -317,6 +481,7 @@ class App(tk.Tk):
                 CodDistriProd=self.cod_ext_var.get()
             )
             
+            
             # Crear ventana Toplevel
             self.top = tk.Toplevel(self)
             self.top.title("Información de homologación")
@@ -332,7 +497,7 @@ class App(tk.Tk):
                 tree.column(col, anchor='center', width=100)
             
             # Insertar datos en el Treeview
-            for index, row in DF_Proces.iterrows():
+            for index, row in DF_Proces[DF_Proces['DescSyngenta'].duplicated()].iterrows():
                 tree.insert("", "end", values=list(row))
             
             # Crear y mostrar información adicional
@@ -364,7 +529,7 @@ class App(tk.Tk):
         Distri_df, ruta_destino=Distribuidor_H.get_Catalogo(Distribuidor_H.ruta, v_Name_Distri=Distribuidor_H.v_Name_Distri)
         print(Distri_df.columns)
         print("Tipo de catalogo:", Tipo)
-        if Tipo == 1:
+        if Tipo == 2:
             H_output=Distribuidor_H.Tipo_Externo(Distribuidor=Distri_df, v_Name_Distri=Name_Distri, v_Num_Distri=Num_Distri, CodDistriProd=CodDistriProd, NomDistriProd=NomDistriProd)
             # print(H_output)
             Distribuidor_H.Output_Homologacion(ruta_last=ruta_destino, Distribuidor=H_output)
