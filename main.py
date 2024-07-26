@@ -27,8 +27,8 @@ class App(tk.Tk):
     
     def __init__(self):
         super().__init__()
-        self.title("Sell Out to Web Service")
-        self.geometry("950x700")
+        self.title("Homologaciones ConAgro")
+        self.geometry("950x600")
         self.resizable(0, 0)
         
         # Inicializar variables
@@ -87,26 +87,58 @@ class App(tk.Tk):
 
         # Inicialmente ocultar todos los elementos
         self.hide_all()
+        
+    def search_num(self, event):
+        value = self.num_distri.get()
+        if value == '':
+            data = self.aux_Num
+        else:
+            data = []
+            for item in self.aux_Num:
+                if value.lower() in item.lower():
+                    data.append(item)
+        self.distri_entry['values'] = data
+
+    def search_name(self, event):
+        value = self.name_distri.get()
+        if value == '':
+            data = self.aux_Name
+        else:
+            data = []
+            for item in self.aux_Name:
+                if value.lower() in item.lower():
+                    data.append(item)
+        self.name_entry['values'] = data
+
+                    
 
     def create_all_widgets(self):
         self.ruta_label = ttk.Label(self, text="Selecciona el catálogo a Homologar:", style='TLabel')
         
         self.browse_button = ttk.Button(self, text="Seleccionar archivo", command=self.seleccionar_archivo)
         
-        self.ruta_label = ttk.Label(self, text="Ruta del archivo seleccionado: \n"+"", style='TLabel')
+        self.ruta_label = ttk.Label(self, text="Archivo seleccionado con exito", style='TLabel')
         
         ## Establecemos ruta absoluta de archivo con datos de distribuidores:
         self.ruta_CatalogoDistribuidores = self.resource_path("Catalogo Distribuidores.xlsx")
         self.Catalogo = pd.read_excel(self.ruta_CatalogoDistribuidores, sheet_name=0)
-        aux_Num = list(self.Catalogo['Sold to'].sort_values().unique())
-        aux_Name = list(self.Catalogo['Descripción'].unique())
+        self.aux_Num = list(self.Catalogo['Sold to'].sort_values().unique())
+        self.aux_Name = list(self.Catalogo['Descripción'].unique())
+        
+        # Convertir números a cadenas
+        self.aux_Num = [str(num) for num in self.aux_Num]
+        
+        # Convertir números a cadenas
+        self.aux_Name = [str(num) for num in self.aux_Name]
         
         # Entradas para el numero de distribuidor
         self.distri_label = ttk.Label(self, text="Ingresa el Número de cliente:", style='TLabel')
         
         self.distri_entry = ttk.Combobox(self, textvariable=self.num_distri, font=('Helvetica', 11), state='normal')
-        self.distri_entry['values'] = aux_Num
+        self.distri_entry['values'] = self.aux_Num
+        self.distri_entry.bind('<KeyRelease>', self.search_num)
         self.distri_entry.config(width=40)
+        
         
         self.B3 = ttk.Button(self, text="Insertar", command=self.obtener_num)
         
@@ -114,8 +146,10 @@ class App(tk.Tk):
         
         # Entrada para el nombre del distribuidor
         self.name_entry = ttk.Combobox(self, textvariable=self.name_distri, font=('Helvetica', 11), state='normal')
-        self.name_entry['values'] = aux_Name
+        self.name_entry['values'] = self.aux_Name
+        self.name_entry.bind('<KeyRelease>', self.search_name)
         self.name_entry.config(width=40)
+
         
         self.B4 = ttk.Button(self, text="Insertar", command=self.obtener_nombre)
         
@@ -291,25 +325,25 @@ class App(tk.Tk):
 
         
     def create_menu_button(self, parent, text, icon, command, value=None):
-            frame = tk.Frame(parent, bg="#abb400")
-            frame.pack(side=tk.TOP, fill=tk.X)
+        frame = tk.Frame(parent, bg="#abb400")
+        frame.pack(side=tk.TOP, fill=tk.X)
 
-            label_icon = tk.Label(frame, text=icon, font=("FontAwesome", 15), bg="#abb400", fg="white")
-            label_icon.pack(side=tk.LEFT, padx=5)
+        label_icon = tk.Label(frame, text=icon, font=("FontAwesome", 15), bg="#abb400", fg="white")
+        label_icon.pack(side=tk.LEFT, padx=5)
 
-            label_text = tk.Label(frame, text=text, font=("Arial", 12), bg="#abb400", fg="white")
-            label_text.pack(side=tk.LEFT, padx=5)
+        label_text = tk.Label(frame, text=text, font=("Arial", 12), bg="#abb400", fg="white")
+        label_text.pack(side=tk.LEFT, padx=5)
 
-            if value is not None:
-                label_icon.bind("<Button-1>", lambda event: self.on_click(value, command))
-                label_text.bind("<Button-1>", lambda event: self.on_click(value, command))
-            else:
-                label_icon.bind("<Button-1>", lambda event: command())
-                label_text.bind("<Button-1>", lambda event: command())
+        if value is not None:
+            label_icon.bind("<Button-1>", lambda event: self.on_click(value, command))
+            label_text.bind("<Button-1>", lambda event: self.on_click(value, command))
+        else:
+            label_icon.bind("<Button-1>", lambda event: command())
+            label_text.bind("<Button-1>", lambda event: command())
 
-            self.bind_hover_events(frame, label_icon, label_text)
+        self.bind_hover_events(frame, label_icon, label_text)
 
-            return frame
+        return frame
 
     def bind_hover_events(self, frame, label_icon, label_text):
         # Asociar eventos Enter y Leave con la función dinámica
@@ -364,7 +398,7 @@ class App(tk.Tk):
         self.icon_big = tk.PhotoImage(file=self.ruta_ico_b)
         self.icon_small = tk.PhotoImage(file=self.ruta_ico_s)
         self.iconphoto(False, self.icon_big, self.icon_small)
-        self.iconbitmap('ConAgro.ico')
+        # self.iconbitmap('ConAgro.ico')
         
         # Etiqueta de informacion
         self.labelTitulo = ttk.Label(self, text="Reportar cualquier incidente con el aplicativo con: \ncarlos.espadin@syngenta.com", font=("Roboto", 10), background='#f0f0f0', foreground='black') # Modificar
