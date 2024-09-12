@@ -33,6 +33,7 @@ class App(tk.Tk):
         
         # Inicializar variables
         self.ruta = tk.StringVar()
+        self.rutaCL = tk.StringVar()
         self.num_distri = tk.StringVar()
         self.name_distri = tk.StringVar()
         self.selected = tk.StringVar()
@@ -110,14 +111,15 @@ class App(tk.Tk):
                     data.append(item)
         self.name_entry['values'] = data
 
-                    
+        
 
     def create_all_widgets(self):
-        self.ruta_label = ttk.Label(self, text="Selecciona el catálogo a Homologar:", style='TLabel')
+        self.nx = 0.1
+        self.ruta_label = ttk.Label(self, text="Archivo seleccionado con exito", style='TLabel')
         
         self.browse_button = ttk.Button(self, text="Seleccionar archivo", command=self.seleccionar_archivo)
         
-        self.ruta_label = ttk.Label(self, text="Archivo seleccionado con exito", style='TLabel')
+        self.ruta_label = ttk.Label(self, text="Selecciona el catálogo a Homologar:", style='TLabel')
         
         ## Establecemos ruta absoluta de archivo con datos de distribuidores:
         self.ruta_CatalogoDistribuidores = self.resource_path("Catalogo Distribuidores.xlsx")
@@ -155,6 +157,12 @@ class App(tk.Tk):
         
         self.B2 = ttk.Button(self, text="Homologar catálogo", command=self.mostrar_mensaje)
         
+        self.Label_Chine_top = ttk.Label(self, text="Selecciona el archivo base de productos Syngenta:")
+        
+        self.browse_buttonCL = ttk.Button(self, text="Seleccionar archivo", command=self.seleccionar_archivoCL)
+        
+        self.ruta_labelCL = ttk.Label(self, text="Selecciona el catálogo a Homologar:", style='TLabel')
+        
     def show_intro_label(self):
         self.intro_label.place(relx=0.33, rely=0.1, relwidth=0.8, relheight=0.3)
         
@@ -163,7 +171,7 @@ class App(tk.Tk):
     
     def show_all_widgets(self):
         self.hide_intro_labe()
-        self.nx = 0 if self.menu_lateral.winfo_ismapped() else 0.2
+        self.nx = 0.1
         self.ruta_label.place(relx=0.3-self.nx, rely=0.15)
         self.browse_button.place(relx=0.3-self.nx, rely=0.1)
         self.ruta_label.place(relx=0.3-self.nx, rely=0.2)
@@ -187,25 +195,34 @@ class App(tk.Tk):
         self.name_entry.place_forget()
         self.B4.place_forget()
         self.B2.place_forget()
+
     
     def show_chile_widgets(self):
-        self.browse_button.place(relx=0.3, rely=0.1)
+        self.ruta_label.place(relx=0.3-self.nx, rely=0.15)
+        self.browse_button.place(relx=0.3-self.nx, rely=0.25)
+        self.Label_Chine_top.place(relx=0.3-self.nx, rely=0.35)
+        self.browse_buttonCL.place(relx=0.3-self.nx, rely=0.45)
+        self.B2.place(relx=0.85-self.nx, rely=0.7, anchor='center')
         
     def hide_chile_widgets(self):
-        self.browse_button.place_forget()
+        self.browse_buttonCL.place_forget()
+        self.Label_Chine_top.place_forget()
+        # self.B2.place_forget()
         
     def create_greeting_message(self):
         # Obtener el valor de Tipo
         Tipo = self.selected.get()
         
         # Mostrar/Ocultar elementos según el valor de Tipo
+        ## Modulo de codigos de tipo Syngenta
         if Tipo == "1":
             self.show_all_widgets()
             # Mostrar elementos de tipo Syngenta
             self.show_syngenta_elements()
             # Ocultar elementos de tipo Externo
             self.hide_external_elements()
-            # self.hide_chile_widgets()
+            self.hide_chile_widgets()
+        ## Modulo de introducción
         elif Tipo == "0":
             self.show_hide_widgets()
             self.hide_syngenta_elements()
@@ -213,13 +230,15 @@ class App(tk.Tk):
             self.hide_NameProdDistr()
             self.hide_chile_widgets()
             self.show_intro_label()
+        ## Modulo de codigos de tipo externos.
         elif Tipo == "2":
             self.show_all_widgets()
             # Mostrar elementos de tipo Externo
             self.show_external_elements()
             # Ocultar elementos de tipo Syngenta
             self.hide_syngenta_elements()
-            # self.hide_chile_widgets()
+            self.hide_chile_widgets()
+        # Modulo Chile
         else:
             self.show_hide_widgets()
             self.hide_syngenta_elements()
@@ -313,22 +332,22 @@ class App(tk.Tk):
         font_awesome = font.Font(family='FontAwesome', size=15)
         
         # Etiqueta de perfil
-        self.labelPerfil = tk.Label(self.menu_lateral, image=self.icon_big, bg="#abb400")
+        self.labelPerfil = tk.Label(self.menu_lateral, image=self.ico_Home, bg="#abb400")
         self.labelPerfil.pack(side=tk.TOP, pady=10)
 
         # Crear los botones con icono y texto
-        self.buttonDashBoard = self.create_menu_button(self.menu_lateral, "Inicio", "\uf109", self.create_greeting_message, "0")
-        self.bottonSync = self.create_menu_button(self.menu_lateral, "Tipo Syngenta", "\uf007", self.create_greeting_message, "1")
-        self.bottonExt = self.create_menu_button(self.menu_lateral, "Tipo externas", "\uf03e", self.create_greeting_message, "2")
-        self.bottonCL = self.create_menu_button(self.menu_lateral, "Chile", "\uf129", self.create_greeting_message, "3")
-        self.buttonSettings = self.create_menu_button(self.menu_lateral, "Settings", "\uf013", self.create_greeting_message)
+        self.buttonDashBoard = self.create_menu_button(self.menu_lateral, "Inicio", self.ico_Step1, self.create_greeting_message, "0")
+        self.bottonSync = self.create_menu_button(self.menu_lateral, "Tipo Syngenta", self.ico_Step2, self.create_greeting_message, "1")
+        self.bottonExt = self.create_menu_button(self.menu_lateral, "Tipo externas", self.ico_Step3, self.create_greeting_message, "2")
+        self.bottonCL = self.create_menu_button(self.menu_lateral, "Chile", self.ico_Step4, self.create_greeting_message, "3")
+        self.buttonSettings = self.create_menu_button(self.menu_lateral, "Settings", self.icoSettings, self.create_greeting_message)
 
         
     def create_menu_button(self, parent, text, icon, command, value=None):
         frame = tk.Frame(parent, bg="#abb400")
         frame.pack(side=tk.TOP, fill=tk.X)
 
-        label_icon = tk.Label(frame, text=icon, font=("FontAwesome", 15), bg="#abb400", fg="white")
+        label_icon = tk.Label(frame, image=icon, font=("FontAwesome", 15), bg="#abb400", fg="white")
         label_icon.pack(side=tk.LEFT, padx=5)
 
         label_text = tk.Label(frame, text=text, font=("Arial", 12), bg="#abb400", fg="white")
@@ -393,11 +412,23 @@ class App(tk.Tk):
         # Establecemos la ruta absoluta:
         self.ruta_ico_s = self.resource_path("ConAgro_icon_small.png")
         self.ruta_ico_b = self.resource_path("ConAgro_icon_big.png")
+        self.ruta_icoHome = self.resource_path("agriculture_6739552.png")
+        self.ruta_icoStep1 = self.resource_path("home_2115185.png")
+        self.ruta_icoStep2 = self.resource_path("workflow_14254834.png")
+        self.ruta_icoStep3 = self.resource_path("onboarding_14753055.png")
+        self.ruta_icoStep4 = self.resource_path("review-document_14752610.png")
+        self.ruta_icoSettings = self.resource_path("setting_1146744.png")
         
         # configure icon
         self.icon_big = tk.PhotoImage(file=self.ruta_ico_b)
         self.icon_small = tk.PhotoImage(file=self.ruta_ico_s)
-        self.iconphoto(False, self.icon_big, self.icon_small)
+        self.ico_Home = tk.PhotoImage(file=self.ruta_icoHome)
+        self.ico_Step1 = tk.PhotoImage(file=self.ruta_icoStep1)
+        self.ico_Step2 = tk.PhotoImage(file=self.ruta_icoStep2)
+        self.ico_Step3 = tk.PhotoImage(file=self.ruta_icoStep3)
+        self.ico_Step4 = tk.PhotoImage(file=self.ruta_icoStep4)
+        self.icoSettings = tk.PhotoImage(file=self.ruta_icoSettings)
+        self.iconphoto(False, self.icon_big, self.icon_small, self.ico_Home, self.ico_Step1, self.ico_Step2, self.ico_Step3, self.icoSettings)
         # self.iconbitmap('ConAgro.ico')
         
         # Etiqueta de informacion
@@ -408,7 +439,7 @@ class App(tk.Tk):
         # Invocacion de paneles
         self.paneles()
         self.controles_barra_superior()
-        self.controles_menu_lateral()
+        self.controles_menu_lateral() 
         
         self.create_intro_label()
         self.show_intro_label()
@@ -420,12 +451,40 @@ class App(tk.Tk):
     # Método para cerrar la venta App.
     def cerrar_ventana(self):
         self.destroy()
+        
+    def seleccionar_archivoCL(self):
+        filetypes = (('Archivo de Excel', '*.xlsx'), ('All files', '*.*'))
+        filename = filedialog.askopenfilename(title='Abrir archivo', initialdir='/', filetypes=filetypes)
+        self.rutaCL.set(filename)
+        ruta_archivo = os.path.basename(filename)
+        print(f"Extraemos las columnas de '{ruta_archivo}'")
+        self.Label_Chine_top.config(text="Archivo:\n"+ruta_archivo+" seleccionado con exito")
     
     def seleccionar_archivo(self):
         filetypes = (('Archivo de Excel', '*.xlsx'), ('All files', '*.*'))
         filename = filedialog.askopenfilename(title='Abrir archivo', initialdir='/', filetypes=filetypes)
         self.ruta.set(filename)
-        self.ruta_label.config(text="Ruta del archivo seleccionado: \n"+filename)
+        ruta_archivo = os.path.basename(filename)
+        aux_catalogo = pd.read_excel(self.ruta.get(), sheet_name=0)
+        aux_columns = list(aux_catalogo.columns)
+        print(f"Extraemos las columnas de '{ruta_archivo}'")
+        self.ruta_label.config(text="Archivo:\n"+ruta_archivo+" seleccionado con exito")
+        Tipo = self.selected.get()
+        
+        # Mostrar/Ocultar elementos según el valor de Tipo
+        if Tipo == "2":
+            self.NameProdDistr_entry.insert(1,aux_columns[1])
+            self.CodExt_entry.insert(1,aux_columns[0]) 
+        elif Tipo == "1":
+            self.CodExt_entry_Syc.insert(1, aux_columns[0])
+            self.NameProdDistr_entry.insert(1,aux_columns[1])
+            self.CodSygenta_entry.insert(1,aux_columns[2])
+        else:
+            self.CodExt_entry_Syc.insert(1, "")
+            self.NameProdDistr_entry.insert(1,"")
+            self.CodSygenta_entry.insert(1,"")
+            self.CodExt_entry.insert(1,"")
+        
     # Ventana de error si el número de cliente ingresado no existe.
     def Cliente_Not_foud(self):  # sourcery skip: class-extract-method
         messagebox.showerror("Error", "El cliente que estás ingresando no está registrado en ConAgro")
@@ -509,12 +568,12 @@ class App(tk.Tk):
                 Num_Distri=self.num_distri.get(),
                 Name_Distri=self.name_distri.get(),
                 ruta=self.ruta.get(),
+                rutaCL=self.rutaCL.get(),
                 CodSyngenta=self.cod_syngenta_var.get(),
                 NomDistriProd=self.name_prod_distr_var.get(),
                 CodDistriProd_Syc=self.cod_ext_syc_var.get(), 
                 CodDistriProd=self.cod_ext_var.get()
             )
-            
             
             # Crear ventana Toplevel
             self.top = tk.Toplevel(self)
@@ -530,18 +589,44 @@ class App(tk.Tk):
                 tree.heading(col, text=col)
                 tree.column(col, anchor='center', width=100)
             
-            # Insertar datos en el Treeview
-            for index, row in DF_Proces[DF_Proces['DescSyngenta'].duplicated()].iterrows():
-                tree.insert("", "end", values=list(row))
-            
-            # Crear y mostrar información adicional
-            info_label = tk.Label(self.top, text=(
-                "Ruta: " + self.ruta.get() +
-                "\nNúmero de distribuidor: " + self.num_distri.get() +
-                "\nNombre del distribuidor: " + self.name_distri.get() +
-                "\nTipo de producto: " + self.selected.get()
-            ), padx=10, pady=10)
-            info_label.pack(side='top', anchor='w')
+            if (int(self.selected.get()) == 2 ) or (int(self.selected.get()) == 1):
+                print("Ventana para México")
+                efectividad = len( DF_Proces[DF_Proces['DescSyngenta'].notnull()])
+                Per = efectividad/len(DF_Proces['DescSyngenta'])
+                porcentaje_formateado = "{:.2%}".format(Per)
+                # Insertar datos en el Treeview
+                for index, row in DF_Proces[DF_Proces['DescSyngenta'].duplicated()].iterrows():
+                    tree.insert("", "end", values=list(row))
+                
+                # Crear y mostrar información adicional
+                info_label = tk.Label(self.top, text=(
+                    "Ruta: " + self.ruta.get() +
+                    "\nNúmero de distribuidor: " + self.num_distri.get() +
+                    "\nNombre del distribuidor: " + self.name_distri.get() +
+                    "\nTipo de producto: " + self.selected.get()+
+                    "\nTotal de registros : " + str(len(DF_Proces['DescSyngenta']))+
+                    "\nTotal de coincidencias encontradas: "+str(efectividad)+
+                    "\nPorcentaje de efectividad: "+str(porcentaje_formateado)
+                ), padx=10, pady=10)
+                info_label.pack(side='top', anchor='w')
+            else:
+                print("Ventana para chile")
+                efectividad = len( DF_Proces[DF_Proces['PRPD'].notnull()])
+                Per = efectividad/len(DF_Proces['PRPD'])
+                Total = len(DF_Proces['PRPD'])
+                porcentaje_formateado = "{:.2%}".format(Per)
+                # Insertar datos en el Treeview
+                for index, row in DF_Proces[DF_Proces['PRPD'].isnull()].iterrows():
+                    tree.insert("", "end", values=list(row))
+                
+                info_label = tk.Label(self.top, text=(
+                    "Ruta: " + self.ruta.get() +
+                    "\nTotal de registros : " + str(Total) +
+                    "\nTotal de coincidencias encontradas: "+str(efectividad)+
+                    "\nPorcentaje de efectividad: "+str(porcentaje_formateado)
+                    ), padx=10, pady=10
+                )
+                info_label.pack(side='top', anchor='w')
             
             self.close_button = ttk.Button(self.top, text="Terminar Homologación", command=self.close_toplevel)
             self.close_button.pack(pady=20)
@@ -556,20 +641,32 @@ class App(tk.Tk):
             traceback.print_exc()
             self.error_columnas()
         except TypeError as e4:
+            traceback.print_exc()
             self.mostrar_error()
         
-    def Procesamiento(self, Tipo, Num_Distri, Name_Distri, ruta, CodDistriProd_Syc, CodSyngenta, NomDistriProd, CodDistriProd):
-        Distribuidor_H = General_Prod.Catalogo(v_Num_Distri=Num_Distri,v_Name_Distri=Name_Distri, v_ruta=ruta, v_CodDistriProd_Syc=CodDistriProd_Syc, v_CodSyngenta=CodSyngenta, v_NomDistriProd=NomDistriProd, v_CodDistriProd=CodDistriProd)
-        Distri_df, ruta_destino=Distribuidor_H.get_Catalogo(Distribuidor_H.ruta, v_Name_Distri=Distribuidor_H.v_Name_Distri)
-        print(Distri_df.columns)
+    def Procesamiento(self, Tipo, Num_Distri, Name_Distri, ruta, rutaCL, CodDistriProd_Syc, CodSyngenta, NomDistriProd, CodDistriProd):
+        Distribuidor_H = General_Prod.Catalogo(v_Num_Distri=Num_Distri,v_Name_Distri=Name_Distri, v_ruta=ruta, v_rutaCL=rutaCL, v_CodDistriProd_Syc=CodDistriProd_Syc, v_CodSyngenta=CodSyngenta, v_NomDistriProd=NomDistriProd, v_CodDistriProd=CodDistriProd)
         print("Tipo de catalogo:", Tipo)
         if Tipo == 2:
+            Distri_df, ruta_destino=Distribuidor_H.get_Catalogo(Distribuidor_H.ruta, v_Name_Distri=Distribuidor_H.v_Name_Distri)
+            print(Distri_df.columns)
             H_output=Distribuidor_H.Tipo_Externo(Distribuidor=Distri_df, v_Name_Distri=Name_Distri, v_Num_Distri=Num_Distri, CodDistriProd=CodDistriProd, NomDistriProd=NomDistriProd)
             # print(H_output)
             Distribuidor_H.Output_Homologacion(ruta_last=ruta_destino, Distribuidor=H_output)
             print("Homologación de con claves externar terminada con exito.")
-        else:
+        elif Tipo == 1:
             print("Tipo código Syngenta")
+        elif Tipo == 3:
+            Distri_df, ruta_destino=Distribuidor_H.get_CatalogoCL(Distribuidor_H.ruta)
+            print(Distri_df.columns)
+            H_output1, H_output2, H_output3, H_output4=Distribuidor_H.Tipo_NormCL(Distribuidor=Distri_df, ruta_CatalogoSyc=Distribuidor_H.rutaCL)
+            H_output1 = H_output1[['Producto','PRPD','SKU', 'PRESENTACION']]
+            H_output2 = H_output2[['Producto','PRPD','SKU', 'PRESENTACION']]
+            H_output3 = H_output3[['Producto','PRPD','SKU', 'PRESENTACION']]
+            H_output4 = H_output4[['Producto','PRPD','SKU', 'PRESENTACION']]
+            Distribuidor_H.Output_Norm(ruta_last=ruta_destino, Distribuidor1=H_output1, Distribuidor2=H_output2, Distribuidor3=H_output3, Distribuidor4=H_output4)
+            H_output = H_output4
+            print("Normalización de productos Syngenta terminada con exito.")
         return H_output
 
 if __name__ == "__main__":
