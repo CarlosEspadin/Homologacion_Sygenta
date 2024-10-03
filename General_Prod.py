@@ -83,6 +83,21 @@ class Catalogo:
         # print()
     
     def Tipo_NormCL(self, Distribuidor, ruta_CatalogoSyc):
+        # Guardamos las columnas Id, SKU y Producto para mostrar el output final.
+        # print(Distribuidor['SKU'].isna().sum())
+        # Distribuidor['SKU'] = Distribuidor['SKU'].astype(str).fillna(' ')
+        Distribuidor.loc[Distribuidor['SKU'].isna(), 'SKU'] = ""
+        Distribuidor['Producto'] = Distribuidor['Producto'].fillna('')
+        df_final = Distribuidor[['Id', 'SKU', 'Producto']]
+        print(df_final)
+        # df_final['key'] = df_final['SKU'].map(str)+""+df_final['Producto']
+        df_final.loc[:, 'key'] = df_final.loc[:, ["SKU", "Producto"]].astype(str).agg("".join, axis=1)
+        # df_final['key'] = df_final['key'].str.strip()
+        # Validación para saber que se conserve el mismo número de columnas.
+        row=df_final.shape[0]
+        colum=df_final.shape[1]
+        print("Dimensiones del conjunto inicial:")
+        print("["+str(row)+" rows x "+str(colum)+" columns]")
         # Dejamos registros unicos.
         Distribuidor = Distribuidor[['SKU', 'Producto']]
         Distribuidor = Distribuidor.groupby(['SKU', 'Producto']).first().reset_index()
@@ -97,6 +112,11 @@ class Catalogo:
         Distribuidor['id_row']= Distribuidor.index
         ## Filtramos los que si tuvieron coincidencia exacta:
         EDistribuidor = Distribuidor[Distribuidor['PRPD'].notnull()].reset_index()
+        # Validación para saber que se conserve el mismo número de columnas.
+        row=EDistribuidor.shape[0]
+        colum=EDistribuidor.shape[1]
+        print("Dimensiones del conjunto de coincidencias exactas:")
+        print("["+str(row)+" rows x "+str(colum)+" columns]")
         # Añadimos la presentación usando vlookup con PRPD.
         self.Fvlookup(columna1='Producto',
                     columna2='N°_presentacion.1',
@@ -106,8 +126,20 @@ class Catalogo:
                     columnaBusqueda='PRPD')
         # Filtramos aquellos que no tuvieron coincidencia exacta:
         Distribuidor_Norm=Distribuidor[Distribuidor['PRPD'].isnull()].reset_index()
+        # Contruimos columna auxiliar para mejorar busqueda con logica difusa
+        Distribuidor_Norm['SKU'] = Distribuidor_Norm['SKU'].fillna(" ")
+        Distribuidor_Norm['SKU'] = Distribuidor_Norm['SKU'].astype(str)
+        Distribuidor_Norm[['SKU_code', 'Presentacion_Prod']] = Distribuidor_Norm['SKU'].str.split('-', expand=True)
+        print("Validación de union")
+        print(Distribuidor_Norm)
+        Distribuidor_Norm['SKU_code'] = Distribuidor_Norm['SKU_code'].astype(str)
+        Distribuidor_Norm['Presentacion_Prod'].astype(str)
+        Distribuidor_Norm['SKU_code'] = Distribuidor_Norm['SKU_code'].fillna(" ")
+        Distribuidor_Norm['Presentacion_Prod'].fillna(" ")
+        Distribuidor_Norm['Producto_Aux'] = Distribuidor_Norm[["Producto", "Presentacion_Prod"]].fillna('').agg(" ".join, axis=1)
+        print(Distribuidor_Norm['Producto_Aux'])
         # Encontramos el resto de las coincidencias usando logica difusa:
-        Distribuidor_Norm['PRPD'] = Distribuidor_Norm["Producto"].str.rstrip().apply(
+        Distribuidor_Norm['PRPD'] = Distribuidor_Norm["Producto_Aux"].str.rstrip().apply(
             lambda x: (difflib.get_close_matches(x.upper(), Materiales['Producto'], cutoff=0.7)[:1]  or [None])[0]
             )
         ## Añadimos la presentación al datafreme 
@@ -120,6 +152,37 @@ class Catalogo:
         print("Nombres de las columnas con presentación añadida")
         print(Distribuidor_Norm.columns)
         Distribuidor_Norm['PRESENTACION'] = Distribuidor_Norm['PRESENTACION'].str.lower()
+        # Validación para saber que se conserve el mismo número de columnas.
+        row=Distribuidor_Norm.shape[0]
+        colum=Distribuidor_Norm.shape[1]
+        print("Dimensiones del conjunto de coincidencias no exactas:")
+        print("["+str(row)+" rows x "+str(colum)+" columns]")
+        # Añadirmos a df_final la columna PRPD
+        df_AUX = pd.concat([Distribuidor_Norm, EDistribuidor])
+        # Validación para saber que se conserve el mismo número de registros.
+        row=df_AUX.shape[0]
+        colum=df_AUX.shape[1]
+        ### 
+        df_AUX['SKU'] = df_AUX['SKU'].astype(str)
+        df_AUX['SKU'] = df_AUX['SKU'].fillna(" ")
+        df_AUX['key'] = df_AUX[["SKU", "Producto"]].agg("".join, axis=1)
+        df_AUX['key'] = df_AUX['key'].str.strip()
+        print("Dimensiones de df_AUX:")
+        print("["+str(row)+" rows x "+str(colum)+" columns]")
+        self.Fvlookup(columna1='key',
+                    columna2='PRPD',
+                    df_base=df_AUX,
+                    df_salida=df_final,
+                    columnaNueva='PRPD',
+                    columnaBusqueda='key')
+        # Validación para saber que se conserve el mismo número de columnas.
+        row=df_final.shape[0]
+        colum=df_final.shape[1]
+        print("Dimensiones del conjunto df final con PRPD:")
+        print("["+str(row)+" rows x "+str(colum)+" columns]")
+        print("Dataframe Final")
+        # print(df_final[['Id', 'PRPD']])
+        print(df_final)
         ## Dividimos el dataframe por tipo de presentación:
         SDistribuidor = Distribuidor_Norm[Distribuidor_Norm['PRESENTACION']=='s'].reset_index()
         DDistribuidor = Distribuidor_Norm[Distribuidor_Norm['PRESENTACION']=='d'].reset_index()
@@ -149,6 +212,10 @@ class Catalogo:
             DDistribuidor.loc[0] = [" ", " ", " ", " ", " ", " ", " "]
         else:
             DDistribuidor = DDistribuidor.fillna("")
+        if df_final.empty:
+            df_final.loc[0] = [" ", " "]
+        else:
+            df_final = df_final.fillna("")
         print("Descripciones del tipo S")
         print(SDistribuidor)
         # Materiales_aux1=Materiales[['Producto', 'N°_presentacion.1']]
@@ -159,7 +226,8 @@ class Catalogo:
         print("Finaliza correctamente el procesamiento tipo CL")
         
         
-        return EDistribuidor, SDistribuidor, DDistribuidor, NDistribuidor
+        
+        return EDistribuidor, SDistribuidor, DDistribuidor, NDistribuidor, df_final
     
     def Tipo_Syngenta(self, Distribuidor, v_Name_Distri, v_Num_Distri, NomDistriProd, CodDistriProd, CodSyngenta):
         # Carga de catalogo de materiales.
@@ -209,7 +277,7 @@ class Catalogo:
         # Validación para saber que se conserve el mismo número de columnas.
         row=Distribuidor.shape[0]
         colum=Distribuidor.shape[1]
-        print("Dimensiones del conjunto original:")
+        print("Dimensiones del conjunto final:")
         print("["+str(row)+" rows x "+str(colum)+" columns]")
         print("Dimensiones del conjunto homologado",len(Distribuidor))
         
@@ -237,6 +305,8 @@ class Catalogo:
         Materiales22.sort_values(['SKU'])
         Materiales21.sort_values(['SKU'])
         Materiales20.sort_values(['SKU'])
+        
+        # Distribuidor = Distribuidor.unique()
         
         # Encontramos las coincidencias usando logica difusa
         Distribuidor['DescSyngenta'] = Distribuidor[NomDistriProd].str.rstrip().apply(
@@ -282,7 +352,7 @@ class Catalogo:
         # Validación para saber que se conserve el mismo número de columnas.
         row=Distribuidor.shape[0]
         colum=Distribuidor.shape[1]
-        print("Dimensiones del conjunto original:")
+        print("Dimensiones del conjunto final:")
         print("["+str(row)+" rows x "+str(colum)+" columns]")
         
         return Distribuidor
@@ -306,7 +376,7 @@ class Catalogo:
     def AutoAjuste(self,columna_id, tamaño, sheet):
         sheet.column_dimensions[columna_id].width = len(str(tamaño))
     
-    def Output_Norm(self, ruta_last, Distribuidor1, Distribuidor2, Distribuidor3, Distribuidor4):
+    def Output_Norm(self, ruta_last, Distribuidor1, Distribuidor2, Distribuidor3, Distribuidor4, Distribuidor5):
         book = Workbook()
         sheet = book.active
         sheet.title = 'Coincidencia Exacta'
@@ -496,5 +566,44 @@ class Catalogo:
         
         sheet4.column_dimensions['A'].width = 20
         sheet4.column_dimensions['D'].width = 20
+        
+        ## Hoja final de Id y PRPD
+        # Definimos los encavezados:
+        sheet4 = book.create_sheet('Pisar Volumen')
+
+        sheet4['A1']="Id"
+        sheet4['B1']="PRPD"
+
+        SKU = sheet4.cell(row=1, column=1)                #A1
+        PRPD = sheet4.cell(row=1, column=2)           #B1
+        
+        
+        Encabezados = (SKU, PRPD)
+        # Font de los encabezados:
+        for columna in Encabezados:
+            self.ChangeFont(columna, 1, 13)
+        
+        # Cambiar fondo de los encabezados:
+        for columna in Encabezados:
+            self.ChangeFill(columna, 'eb8200')
+        #Ajustamos el tamaño de las columnas:
+        # Obtenemos el elemento más largo por longitud de caracteres.
+        SKUMax = max(Distribuidor5['SKU'].astype(str).value_counts().index, key=len)
+        PRPDMax = max(Distribuidor5['PRPD'].value_counts().index, key=len)
+
+        Max_List = (SKUMax,PRPDMax)
+
+        for i, j in ((SKUMax, 'A'), (PRPDMax, 'B')):
+            self.AutoAjuste(tamaño=i, columna_id=j, sheet=sheet4)
+            
+        # Incertar los valores a las columnas
+        List_SKU = list(Distribuidor5['SKU'])
+        List_PRPD = list(Distribuidor5['PRPD'].fillna(""))
+
+        for i, j in ((List_SKU, 'A'),(List_PRPD, 'B')):
+            self.Add_cell(i, j, sheet=sheet4)
+        
+        # sheet4.column_dimensions['A'].width = 20
+        # sheet4.column_dimensions['B'].width = 20
         
         book.save(ruta_last)

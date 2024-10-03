@@ -30,7 +30,7 @@ class App(tk.Tk):
         self.title("Homologaciones ConAgro")
         self.geometry("950x600")
         self.resizable(0, 0)
-        
+
         # Inicializar variables
         self.ruta = tk.StringVar()
         self.rutaCL = tk.StringVar()
@@ -659,13 +659,13 @@ class App(tk.Tk):
         elif Tipo == 3:
             Distri_df, ruta_destino=Distribuidor_H.get_CatalogoCL(Distribuidor_H.ruta)
             print(Distri_df.columns)
-            H_output1, H_output2, H_output3, H_output4=Distribuidor_H.Tipo_NormCL(Distribuidor=Distri_df, ruta_CatalogoSyc=Distribuidor_H.rutaCL)
+            H_output1, H_output2, H_output3, H_output4, H_output5=Distribuidor_H.Tipo_NormCL(Distribuidor=Distri_df, ruta_CatalogoSyc=Distribuidor_H.rutaCL)
             H_output1 = H_output1[['Producto','PRPD','SKU', 'PRESENTACION']]
             H_output2 = H_output2[['Producto','PRPD','SKU', 'PRESENTACION']]
             H_output3 = H_output3[['Producto','PRPD','SKU', 'PRESENTACION']]
             H_output4 = H_output4[['Producto','PRPD','SKU', 'PRESENTACION']]
-            Distribuidor_H.Output_Norm(ruta_last=ruta_destino, Distribuidor1=H_output1, Distribuidor2=H_output2, Distribuidor3=H_output3, Distribuidor4=H_output4)
-            H_output = H_output4
+            Distribuidor_H.Output_Norm(ruta_last=ruta_destino, Distribuidor1=H_output1, Distribuidor2=H_output2, Distribuidor3=H_output3, Distribuidor4=H_output4, Distribuidor5=H_output5)
+            H_output = H_output5
             print("Normalización de productos Syngenta terminada con exito.")
         return H_output
 
