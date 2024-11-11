@@ -562,6 +562,7 @@ class App(tk.Tk):
             sys.exit()
     
     def mostrar_mensaje(self):
+        # sourcery skip: collection-into-set, merge-comparisons, remove-unnecessary-cast
         try:
             DF_Proces = self.Procesamiento(
                 Tipo=int(self.selected.get()),
@@ -574,6 +575,7 @@ class App(tk.Tk):
                 CodDistriProd_Syc=self.cod_ext_syc_var.get(), 
                 CodDistriProd=self.cod_ext_var.get()
             )
+            
             
             # Crear ventana Toplevel
             self.top = tk.Toplevel(self)
@@ -590,7 +592,7 @@ class App(tk.Tk):
                 tree.column(col, anchor='center', width=100)
             
             if (int(self.selected.get()) == 2 ) or (int(self.selected.get()) == 1):
-                print("Ventana para México")
+                print("Ventana para México") 
                 efectividad = len( DF_Proces[DF_Proces['DescSyngenta'].notnull()])
                 Per = efectividad/len(DF_Proces['DescSyngenta'])
                 porcentaje_formateado = "{:.2%}".format(Per)
@@ -611,18 +613,18 @@ class App(tk.Tk):
                 info_label.pack(side='top', anchor='w')
             else:
                 print("Ventana para chile")
-                efectividad = len( DF_Proces[DF_Proces['PRPD'].notnull()])
-                Per = efectividad/len(DF_Proces['PRPD'])
-                Total = len(DF_Proces['PRPD'])
+                efectividad = self.efectividad
+                Total = self.Total
+                Per = 1 - efectividad/Total
                 porcentaje_formateado = "{:.2%}".format(Per)
                 # Insertar datos en el Treeview
-                for index, row in DF_Proces[DF_Proces['PRPD'].isnull()].iterrows():
+                for index, row in DF_Proces[DF_Proces['PRPD'].notnull()].iterrows():
                     tree.insert("", "end", values=list(row))
                 
                 info_label = tk.Label(self.top, text=(
                     "Ruta: " + self.ruta.get() +
                     "\nTotal de registros : " + str(Total) +
-                    "\nTotal de coincidencias encontradas: "+str(efectividad)+
+                    "\nTotal de productos no encontrados: "+str(efectividad)+
                     "\nPorcentaje de efectividad: "+str(porcentaje_formateado)
                     ), padx=10, pady=10
                 )
@@ -645,6 +647,11 @@ class App(tk.Tk):
             self.mostrar_error()
         
     def Procesamiento(self, Tipo, Num_Distri, Name_Distri, ruta, rutaCL, CodDistriProd_Syc, CodSyngenta, NomDistriProd, CodDistriProd):
+        print("Validación de variable de entrada")
+        print("CodSyngenta=",self.cod_syngenta_var.get())
+        print("NomDistriProd=", self.name_prod_distr_var.get())
+        print("CodDistriProd_Syc=", self.cod_ext_syc_var.get())
+        print("CodDistriProd=",self.cod_ext_var.get())
         Distribuidor_H = General_Prod.Catalogo(v_Num_Distri=Num_Distri,v_Name_Distri=Name_Distri, v_ruta=ruta, v_rutaCL=rutaCL, v_CodDistriProd_Syc=CodDistriProd_Syc, v_CodSyngenta=CodSyngenta, v_NomDistriProd=NomDistriProd, v_CodDistriProd=CodDistriProd)
         print("Tipo de catalogo:", Tipo)
         if Tipo == 2:
@@ -655,7 +662,12 @@ class App(tk.Tk):
             Distribuidor_H.Output_Homologacion(ruta_last=ruta_destino, Distribuidor=H_output)
             print("Homologación de con claves externar terminada con exito.")
         elif Tipo == 1:
-            print("Tipo código Syngenta")
+            Distri_df, ruta_destino=Distribuidor_H.get_Catalogo(Distribuidor_H.ruta, v_Name_Distri=Distribuidor_H.v_Name_Distri)
+            print(Distri_df.columns)
+            H_output=Distribuidor_H.Tipo_Syngenta(Distribuidor=Distri_df, v_Name_Distri=Name_Distri, v_Num_Distri=Num_Distri, CodDistriProd=CodDistriProd_Syc, NomDistriProd=NomDistriProd, CodSyngenta=CodSyngenta)
+            # print(H_output)
+            Distribuidor_H.Output_Homologacion(ruta_last=ruta_destino, Distribuidor=H_output)
+            print("Homologación de con claves Syngenta terminada con exito.")
         elif Tipo == 3:
             Distri_df, ruta_destino=Distribuidor_H.get_CatalogoCL(Distribuidor_H.ruta)
             print(Distri_df.columns)
@@ -664,6 +676,8 @@ class App(tk.Tk):
             H_output2 = H_output2[['Producto','PRPD','SKU', 'PRESENTACION']]
             H_output3 = H_output3[['Producto','PRPD','SKU', 'PRESENTACION']]
             H_output4 = H_output4[['Producto','PRPD','SKU', 'PRESENTACION']]
+            self.efectividad = len(H_output4['PRPD'])
+            self.Total = len(H_output4['PRPD'])+len(H_output2['PRPD'])+len(H_output3['PRPD'])+len(H_output1['PRPD'])
             Distribuidor_H.Output_Norm(ruta_last=ruta_destino, Distribuidor1=H_output1, Distribuidor2=H_output2, Distribuidor3=H_output3, Distribuidor4=H_output4, Distribuidor5=H_output5)
             H_output = H_output5
             print("Normalización de productos Syngenta terminada con exito.")

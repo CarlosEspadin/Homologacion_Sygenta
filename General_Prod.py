@@ -227,7 +227,7 @@ class Catalogo:
         
         
         
-        return EDistribuidor, SDistribuidor, DDistribuidor, NDistribuidor, df_final
+        return EDistribuidor, SDistribuidor, DDistribuidor, NDistribuidor, df_final[['Id', 'PRPD']]
     
     def Tipo_Syngenta(self, Distribuidor, v_Name_Distri, v_Num_Distri, NomDistriProd, CodDistriProd, CodSyngenta):
         # Carga de catalogo de materiales.
@@ -267,6 +267,7 @@ class Catalogo:
         Distribuidor['Impuesto']  = 0
         Distribuidor['Pais']= 'MEX'
         Distribuidor['Presentacion'] = np.nan
+        print(Distribuidor)
         Columas = ['CodSyngenta', 'DescSyngenta', 'ClaveDistri', 'DescDistri', 'CodDistriProd', 'NomDistriProd', 'Presentacion', 'Impuesto', 'Pais']
         Distribuidor = Distribuidor[Columas]
         
@@ -310,11 +311,13 @@ class Catalogo:
         
         # Encontramos las coincidencias usando logica difusa
         Distribuidor['DescSyngenta'] = Distribuidor[NomDistriProd].str.rstrip().apply(
-        lambda x: (difflib.get_close_matches(x.upper(), Materiales24['Producto'], cutoff=0.7)[:1] or 
-                difflib.get_close_matches(x.upper(), Materiales23['Producto'], cutoff=0.6)[:1] or
-                difflib.get_close_matches(x.upper(), Materiales22['Producto'], cutoff=0.6)[:1] or
-                difflib.get_close_matches(x.upper(), Materiales21['Producto'], cutoff=0.6)[:1] or
-                difflib.get_close_matches(x.upper(), Materiales20['Producto'], cutoff=0.6)[:1] or [None])[0]
+        lambda x: (difflib.get_close_matches(x.upper(), Materiales24['Producto'], cutoff=0.7)[:1] 
+                or 
+                # difflib.get_close_matches(x.upper(), Materiales23['Producto'], cutoff=0.6)[:1] or
+                # difflib.get_close_matches(x.upper(), Materiales22['Producto'], cutoff=0.6)[:1] or
+                # difflib.get_close_matches(x.upper(), Materiales21['Producto'], cutoff=0.6)[:1] or
+                # difflib.get_close_matches(x.upper(), Materiales20['Producto'], cutoff=0.6)[:1] or 
+                [None])[0]
         )
         
         # Validamos el número de coincidencias y el total
@@ -588,7 +591,7 @@ class Catalogo:
             self.ChangeFill(columna, 'eb8200')
         #Ajustamos el tamaño de las columnas:
         # Obtenemos el elemento más largo por longitud de caracteres.
-        SKUMax = max(Distribuidor5['SKU'].astype(str).value_counts().index, key=len)
+        SKUMax = max(Distribuidor5['Id'].astype(str).value_counts().index, key=len)
         PRPDMax = max(Distribuidor5['PRPD'].value_counts().index, key=len)
 
         Max_List = (SKUMax,PRPDMax)
@@ -597,7 +600,7 @@ class Catalogo:
             self.AutoAjuste(tamaño=i, columna_id=j, sheet=sheet4)
             
         # Incertar los valores a las columnas
-        List_SKU = list(Distribuidor5['SKU'])
+        List_SKU = list(Distribuidor5['Id'])
         List_PRPD = list(Distribuidor5['PRPD'].fillna(""))
 
         for i, j in ((List_SKU, 'A'),(List_PRPD, 'B')):
