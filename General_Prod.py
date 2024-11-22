@@ -231,23 +231,14 @@ class Catalogo:
     
     def Tipo_Syngenta(self, Distribuidor, v_Name_Distri, v_Num_Distri, NomDistriProd, CodDistriProd, CodSyngenta):
         # Carga de catalogo de materiales.
-        ruta_CatalogoSyc = os.path.join(self.get_ruta(), 'Catalogo Base.xlsx')
+        ruta_CatalogoSyc = os.path.join(self.get_ruta(), 'Precios_Facturación_CP_octubre_2024.xlsx')
 
         Materiales = pd.read_excel(ruta_CatalogoSyc)
         
         # Separamos el catalogo por año de producto.
-        Materiales24 = Materiales[Materiales['Año']==2024]
-        Materiales23 =  Materiales[Materiales['Año']==2023]
-        Materiales22 =  Materiales[Materiales['Año']==2022]
-        Materiales21 =  Materiales[Materiales['Año']==2021]
-        Materiales20 =  Materiales[Materiales['Año']==2020]
-        
-        # Ordemos los catalogos de materiales por Producto:
-        Materiales23.sort_values(['Producto'])
-        Materiales24.sort_values(['Producto'])
-        Materiales22.sort_values(['Producto'])
-        Materiales21.sort_values(['Producto'])
-        Materiales20.sort_values(['Producto'])
+        Materiales = Materiales
+
+        Materiales.sort_values(['Producto'])
         
         # Cambiamos los nombres propios del catalogo de distribuidor al formato ConAgro
         Materiales.rename(columns={'Producto':'DescSyngenta', 'SKU': 'CodSyngenta'}, inplace=True)
@@ -288,30 +279,22 @@ class Catalogo:
     
     def Tipo_Externo(self, Distribuidor, v_Name_Distri, v_Num_Distri, NomDistriProd, CodDistriProd):
         # Carga de catalogo de materiales.
-        ruta_CatalogoSyc = os.path.join(self.get_ruta(), 'Catalogo Base.xlsx')
+        ruta_CatalogoSyc = os.path.join(self.get_ruta(), 'Precios_Facturación_CP_octubre_2024.xlsx')
 
 
         Materiales = pd.read_excel(ruta_CatalogoSyc)
         
         # Separamos el catalogo por año de producto.
-        Materiales24 = Materiales[Materiales['Año']==2024]
-        Materiales23 =  Materiales[Materiales['Año']==2023]
-        Materiales22 =  Materiales[Materiales['Año']==2022]
-        Materiales21 =  Materiales[Materiales['Año']==2021]
-        Materiales20 =  Materiales[Materiales['Año']==2020]
+        Materiales24 = Materiales
             
         # Ordemos los catalogos de materiales por SKU:
-        Materiales23.sort_values(['SKU'])
         Materiales24.sort_values(['SKU'])
-        Materiales22.sort_values(['SKU'])
-        Materiales21.sort_values(['SKU'])
-        Materiales20.sort_values(['SKU'])
         
         # Distribuidor = Distribuidor.unique()
         
         # Encontramos las coincidencias usando logica difusa
         Distribuidor['DescSyngenta'] = Distribuidor[NomDistriProd].str.rstrip().apply(
-        lambda x: (difflib.get_close_matches(x.upper(), Materiales24['Producto'], cutoff=0.7)[:1] 
+        lambda x: (difflib.get_close_matches(x.upper(), Materiales24['Producto'], cutoff=0.75)[:1] 
                 or 
                 # difflib.get_close_matches(x.upper(), Materiales23['Producto'], cutoff=0.6)[:1] or
                 # difflib.get_close_matches(x.upper(), Materiales22['Producto'], cutoff=0.6)[:1] or
@@ -361,8 +344,86 @@ class Catalogo:
         return Distribuidor
     
     def Output_Homologacion(self, ruta_last, Distribuidor):
+        book = Workbook()
+        sheet = book.active
+        sheet.title = 'Homologado'
+        ## Hoja de coincidencias exactas.
+        # Definimos los encavezados:
+
+        sheet['A1']="CodSyngenta"
+        sheet['B1']="DescSyngenta"
+        sheet['C1']="ClaveDistri"
+        sheet['D1']="DescDistri"
+        sheet['E1']="CodDistriProd"
+        sheet['F1']="NomDistriProd"
+        sheet['G1']="Presentacion"
+        sheet['H1']="Impuesto"
+        sheet['I1']='Pais'
+
+        CodSyngenta = sheet.cell(row=1, column=1)           #A1
+        DescSyngenta = sheet.cell(row=1, column=2)          #B1
+        ClaveDistri =  sheet.cell(row=1, column=3)          #C1
+        DescDistri = sheet.cell(row=1, column=4)            #D1
+        CodDistriProd =  sheet.cell(row=1, column=5)        #E1
+        NomDistriProd =  sheet.cell(row=1, column=6)        #F1
+        Presentacion =  sheet.cell(row=1, column=7)         #G1
+        Impuesto =  sheet.cell(row=1, column=8)             #H1
+        Pais =  sheet.cell(row=1, column=9)                 #I1
+        
+        Encabezados = (CodSyngenta, DescSyngenta, ClaveDistri, DescDistri, CodDistriProd, NomDistriProd, Presentacion, Impuesto, Pais)
+        # Font de los encabezados:
+        for columna in Encabezados:
+            self.ChangeFont(columna, 1, 13)
+        
+        # Cambiar fondo de los encabezados:
+        for columna in Encabezados:
+            self.ChangeFill(columna, 'eb8200')
+        #Ajustamos el tamaño de las columnas:
+        
+        
+        # Obtenemos el elemento más largo por longitud de caracteres.
+        SKUCodSyngenta = max(Distribuidor['CodSyngenta'].astype(str).value_counts().index, key=len)
+        MaxDescSyngenta = max(Distribuidor['DescSyngenta'].astype(str).value_counts().index, key=len)
+        MaxClaveDistri = max(Distribuidor['ClaveDistri'].astype(str).value_counts().index, key=len)
+        MaxDescDistri = max(Distribuidor['DescDistri'].astype(str).value_counts().index, key=len)
+        MaxCodDistriProd = max(Distribuidor['CodDistriProd'].astype(str).value_counts().index, key=len)
+        MaxNomDistriProd = max(Distribuidor['NomDistriProd'].astype(str).value_counts().index, key=len)
+        MaxPresentacion = max(Distribuidor['Presentacion'].astype(str).value_counts().index, key=len)
+        MaxImpuesto = max(Distribuidor['Impuesto'].astype(str).value_counts().index, key=len)
+        MaxPais = max(Distribuidor['Pais'].astype(str).value_counts().index, key=len)
+
+        Max_List = (SKUCodSyngenta,MaxDescSyngenta,MaxClaveDistri, MaxDescDistri ,MaxCodDistriProd, MaxNomDistriProd, MaxPresentacion, MaxImpuesto, MaxPais)
+
+        for i, j in ((SKUCodSyngenta, 'A'), (MaxDescSyngenta, 'B'), (MaxClaveDistri, 'C'), (MaxDescDistri, 'D'), (MaxCodDistriProd, 'E'), (MaxNomDistriProd, 'F'), (MaxPresentacion, 'G'), (MaxImpuesto, 'H'), (MaxPais, 'I')):
+            self.AutoAjuste(tamaño=i, columna_id=j, sheet=sheet)
+            
+        # Incertar los valores a la columna Sold To A1:
+        List_CodSyngenta = list(Distribuidor['CodSyngenta'].fillna(""))
+        List_DescSyngenta = list(Distribuidor['DescSyngenta'].fillna(""))
+        List_ClaveDistri = list(Distribuidor['ClaveDistri'].fillna(""))
+        List_DescDistri = list(Distribuidor['DescDistri'].fillna(""))
+        List_CodDistriProd = list(Distribuidor['CodDistriProd'].fillna(""))
+        List_NomDistriProd = list(Distribuidor['NomDistriProd'].fillna(""))
+        List_Presentacion = list(Distribuidor['Presentacion'].fillna(""))
+        List_Impuesto = list(Distribuidor['Impuesto'].fillna(""))
+        List_Pais = list(Distribuidor['Pais'].fillna(""))
+
+        for i, j in ((List_CodSyngenta, 'A'), (List_DescSyngenta, 'B'), (List_ClaveDistri, 'C'), (List_DescDistri, 'D'), (List_CodDistriProd, 'E'), (List_NomDistriProd, 'F'), (List_Presentacion, 'G'), (List_Impuesto, 'H'), (List_Pais, 'I')):
+            self.Add_cell(i, j, sheet)
+        
+        sheet.column_dimensions['A'].width = 20
+        sheet.column_dimensions['C'].width = 20
+        sheet.column_dimensions['E'].width = 20
+        sheet.column_dimensions['G'].width = 25
+        sheet.column_dimensions['H'].width = 20
+        sheet.column_dimensions['I'].width = 20
+        
+        book.save(ruta_last)
+    
+    # def Output_Homologacion(self, ruta_last, Distribuidor):
+        
         # Guardamos el resultado en la carpeta correspondiente.
-        Distribuidor.to_excel(ruta_last, "Homologado",index=False)
+        # Distribuidor.to_excel(ruta_last, "Homologado",index=False)
     
     def ChangeFont(self,Columna, indice_color, tamaño):
         Columna.font = Font(name='Arial', size=tamaño, b=True, i=True, color=colors.COLOR_INDEX[indice_color])

@@ -63,25 +63,25 @@ class App(tk.Tk):
         entry_font = {'font': ('Helvetica', 12)}
         
         # Códigos de producto con clave Syngenta
-        self.CodSygenta = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Syngenta:", style='TLabel')
+        self.CodSygenta = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Syngenta: (C)", style='TLabel')
         self.CodSygenta_entry = ttk.Entry(self, textvariable=self.cod_syngenta_var, **entry_font)
         self.CodSygenta_entry.config(width=20)
         self.B5 = ttk.Button(self, text="Insertar", command=self.obtener_CodSycDise)
         
         # Códigos de productos con clave externa
-        self.CodExt = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Externos:", style='TLabel')
+        self.CodExt = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Externos: (A)", style='TLabel')
         self.CodExt_entry = ttk.Entry(self, textvariable=self.cod_ext_var, **entry_font)
         self.CodExt_entry.config(width=20)
         self.B7 = ttk.Button(self, text="Insertar", command=self.obtener_CodExt)
         
         # Descripciones de los productos
-        self.NameProdDistr = ttk.Label(self, text="Ingresa el nombre de la columna las descripciones:", style='TLabel')
+        self.NameProdDistr = ttk.Label(self, text="Ingresa el nombre de la columna las descripciones: (B)", style='TLabel')
         self.NameProdDistr_entry = ttk.Entry(self, textvariable=self.name_prod_distr_var, **entry_font)
         self.NameProdDistr_entry.config(width=20)
         self.B6 = ttk.Button(self, text="Insertar", command=self.obtener_NameProdDistr)
         
         # Codigos de productos con clave externa cuando de origen viene con claves Syngenta
-        self.CodExt_Syc = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Externos:", style='TLabel')
+        self.CodExt_Syc = ttk.Label(self, text="Ingresa el nombre de la columna los códigos Externos: (A)", style='TLabel')
         self.CodExt_entry_Syc = ttk.Entry(self, textvariable=self.cod_ext_syc_var, **entry_font)
         self.CodExt_entry_Syc.config(width=20)
         self.B8 = ttk.Button(self, text="Insertar", command=self.obtener_CodExt_Syc)
