@@ -127,34 +127,38 @@ class Catalogo:
         # Filtramos aquellos que no tuvieron coincidencia exacta:
         Distribuidor_Norm=Distribuidor[Distribuidor['PRPD'].isnull()].reset_index()
         # Contruimos columna auxiliar para mejorar busqueda con logica difusa
-        Distribuidor_Norm['SKU'] = Distribuidor_Norm['SKU'].fillna(" ")
-        Distribuidor_Norm['SKU'] = Distribuidor_Norm['SKU'].astype(str)
-        Distribuidor_Norm[['SKU_code', 'Presentacion_Prod']] = Distribuidor_Norm['SKU'].str.split('-', expand=True)
-        print("Validación de union")
-        print(Distribuidor_Norm)
-        Distribuidor_Norm['SKU_code'] = Distribuidor_Norm['SKU_code'].astype(str)
-        Distribuidor_Norm['Presentacion_Prod'].astype(str)
-        Distribuidor_Norm['SKU_code'] = Distribuidor_Norm['SKU_code'].fillna(" ")
-        Distribuidor_Norm['Presentacion_Prod'].fillna(" ")
-        Distribuidor_Norm['Producto_Aux'] = Distribuidor_Norm[["Producto", "Presentacion_Prod"]].fillna('').agg(" ".join, axis=1)
-        print(Distribuidor_Norm['Producto_Aux'])
-        # Encontramos el resto de las coincidencias usando logica difusa:
-        Distribuidor_Norm['PRPD'] = Distribuidor_Norm["Producto_Aux"].str.rstrip().apply(
-            lambda x: (difflib.get_close_matches(x.upper(), Materiales['Producto'], cutoff=0.7)[:1]  or [None])[0]
-            )
-        ## Añadimos la presentación al datafreme 
-        self.Fvlookup(columna1='Producto',
-                    columna2='N°_presentacion.1',
-                    df_base=Materiales,
-                    df_salida=Distribuidor_Norm,
-                    columnaNueva='PRESENTACION',
-                    columnaBusqueda='PRPD')
-        print("Nombres de las columnas con presentación añadida")
-        print(Distribuidor_Norm.columns)
-        Distribuidor_Norm['PRESENTACION'] = Distribuidor_Norm['PRESENTACION'].str.lower()
-        # Validación para saber que se conserve el mismo número de columnas.
-        row=Distribuidor_Norm.shape[0]
-        colum=Distribuidor_Norm.shape[1]
+        if Distribuidor_Norm['SKU'].isnull().all():
+            Distribuidor_Norm['SKU']=" "
+            Distribuidor_Norm['PRESENTACION']=" "
+        else:
+            Distribuidor_Norm['SKU'] = Distribuidor_Norm['SKU'].fillna(" - ")
+            Distribuidor_Norm['SKU'] = Distribuidor_Norm['SKU'].astype(str)
+            Distribuidor_Norm[['SKU_code', 'Presentacion_Prod']] = Distribuidor_Norm['SKU'].str.split('-', expand=True)
+            print("Validación de union")
+            print(Distribuidor_Norm)
+            Distribuidor_Norm['SKU_code'] = Distribuidor_Norm['SKU_code'].astype(str)
+            Distribuidor_Norm['Presentacion_Prod'].astype(str)
+            Distribuidor_Norm['SKU_code'] = Distribuidor_Norm['SKU_code'].fillna(" ")
+            Distribuidor_Norm['Presentacion_Prod'].fillna(" ")
+            Distribuidor_Norm['Producto_Aux'] = Distribuidor_Norm[["Producto", "Presentacion_Prod"]].fillna('').agg(" ".join, axis=1)
+            print(Distribuidor_Norm['Producto_Aux'])
+            # Encontramos el resto de las coincidencias usando logica difusa:
+            Distribuidor_Norm['PRPD'] = Distribuidor_Norm["Producto_Aux"].str.rstrip().apply(
+                lambda x: (difflib.get_close_matches(x.upper(), Materiales['Producto'], cutoff=0.7)[:1]  or [None])[0]
+                )
+            ## Añadimos la presentación al datafreme 
+            self.Fvlookup(columna1='Producto',
+                        columna2='N°_presentacion.1',
+                        df_base=Materiales,
+                        df_salida=Distribuidor_Norm,
+                        columnaNueva='PRESENTACION',
+                        columnaBusqueda='PRPD')
+            print("Nombres de las columnas con presentación añadida")
+            print(Distribuidor_Norm.columns)
+            Distribuidor_Norm['PRESENTACION'] = Distribuidor_Norm['PRESENTACION'].str.lower()
+            # Validación para saber que se conserve el mismo número de columnas.
+            row=Distribuidor_Norm.shape[0]
+            colum=Distribuidor_Norm.shape[1]
         print("Dimensiones del conjunto de coincidencias no exactas:")
         print("["+str(row)+" rows x "+str(colum)+" columns]")
         # Añadirmos a df_final la columna PRPD

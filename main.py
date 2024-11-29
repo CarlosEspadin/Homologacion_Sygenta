@@ -506,6 +506,12 @@ class App(tk.Tk):
         self.after(30000, self.cerrar_ventana)
         sys.exit()
     
+    # Ventana que se muestra si hay un error desconocido en el archivo excel o el archivo base seleccionado.
+    def error_desconocido(self):
+        messagebox.showerror("Error", "Se encontro un error desconocido en el archivo excel o en el archivo base seleccionado para normalización, reportar al administrador.")
+        self.after(30000, self.cerrar_ventana)
+        sys.exit()
+    
     def obtener_num(self):
         numero = self.num_distri.get()
         messagebox.showinfo("Número de cliente", f"Se ha ingresado el número de cliente: {numero}")
@@ -645,6 +651,9 @@ class App(tk.Tk):
         except TypeError as e4:
             traceback.print_exc()
             self.mostrar_error()
+        except ValueError as e5:
+            traceback.print_exc()
+            self.error_desconocido()
         
     def Procesamiento(self, Tipo, Num_Distri, Name_Distri, ruta, rutaCL, CodDistriProd_Syc, CodSyngenta, NomDistriProd, CodDistriProd):
         print("Validación de variable de entrada")
