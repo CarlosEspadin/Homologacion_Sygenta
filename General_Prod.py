@@ -235,7 +235,8 @@ class Catalogo:
     
     def Tipo_Syngenta(self, Distribuidor, v_Name_Distri, v_Num_Distri, NomDistriProd, CodDistriProd, CodSyngenta):
         # Carga de catalogo de materiales.
-        ruta_CatalogoSyc = os.path.join(self.get_ruta(), 'Precios_Facturación_CP_octubre_2024.xlsx')
+        # ruta_CatalogoSyc = os.path.join(self.get_ruta(), 'Precios_Facturación_CP_octubre_2024.xlsx')
+        ruta_CatalogoSyc = 'Precios_Facturación_CP.xlsx'
 
         Materiales = pd.read_excel(ruta_CatalogoSyc)
         
@@ -283,8 +284,8 @@ class Catalogo:
     
     def Tipo_Externo(self, Distribuidor, v_Name_Distri, v_Num_Distri, NomDistriProd, CodDistriProd):
         # Carga de catalogo de materiales.
-        ruta_CatalogoSyc = os.path.join(self.get_ruta(), 'Precios_Facturación_CP_octubre_2024.xlsx')
-
+        # ruta_CatalogoSyc = os.path.join(self.get_ruta(), 'Precios_Facturación_CP_octubre_2024.xlsx')
+        ruta_CatalogoSyc = 'Precios_Facturación_CP.xlsx'
 
         Materiales = pd.read_excel(ruta_CatalogoSyc)
         
@@ -298,7 +299,7 @@ class Catalogo:
         
         # Encontramos las coincidencias usando logica difusa
         Distribuidor['DescSyngenta'] = Distribuidor[NomDistriProd].str.rstrip().apply(
-        lambda x: (difflib.get_close_matches(x.upper(), Materiales24['Producto'], cutoff=0.75)[:1] 
+        lambda x: (difflib.get_close_matches(x.upper(), Materiales24['Producto'], cutoff=0.65)[:1] 
                 or 
                 # difflib.get_close_matches(x.upper(), Materiales23['Producto'], cutoff=0.6)[:1] or
                 # difflib.get_close_matches(x.upper(), Materiales22['Producto'], cutoff=0.6)[:1] or
